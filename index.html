@@ -235,7 +235,12 @@
       <div class="header-title">🏊 Piscine — Stock</div>
       <div class="header-date" id="hdate"></div>
     </div>
-    <div id="sync-status" style="font-size:11px;opacity:0.7;"></div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div id="sync-status" style="font-size:11px;opacity:0.7;"></div>
+      <button onclick="showPage('stock')" style="background:rgba(255,255,255,0.15);border:1.5px solid rgba(255,255,255,0.3);border-radius:8px;padding:6px 10px;cursor:pointer;display:flex;align-items:center;justify-content:center;" title="Accueil">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      </button>
+    </div>
   </div>
   <div class="user-pills">
     <button class="user-pill active" id="pill-seb" onclick="setUser('Seb')">Seb</button>
@@ -317,6 +322,10 @@
     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
     Utiliser
   </div>
+  <div class="nav-item" onclick="showPage('reappro')">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83"/></svg>
+    Réappro
+  </div>
   <div class="nav-item" onclick="showPage('history')">
     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="12 8 12 12 14 14"/><path d="M3.05 11a9 9 0 1 0 .5-3"/><polyline points="3 4 3 11 10 11"/></svg>
     Historique
@@ -328,6 +337,51 @@
   <div class="nav-item" onclick="showPage('config')">
     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
     Config
+  </div>
+</div>
+
+<div class="page" id="page-reappro">
+  <div class="card">
+    <div class="section-title" style="margin-bottom:14px;">Réapprovisionner un produit</div>
+    <div class="form-group">
+      <label class="form-label">Produit</label>
+      <select id="reappro-product" onchange="onReapproChange()"></select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Quantité ajoutée</label>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input type="number" id="reappro-qty" min="0" step="0.1" placeholder="0.0" style="flex:1;">
+        <span id="reappro-unit" style="font-size:15px;font-weight:600;color:var(--teal-800);min-width:28px;"></span>
+      </div>
+    </div>
+    <button class="btn-submit" id="btn-reappro" onclick="recordReappro()">Ajouter au stock</button>
+  </div>
+
+  <div class="card" style="margin-top:0;">
+    <div class="section-title" style="margin-bottom:14px;">Ajouter un nouveau produit</div>
+    <div class="form-group">
+      <label class="form-label">Nom du produit</label>
+      <input type="text" id="new-product-name" placeholder="ex: Stabilisant poudre">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Quantité initiale en stock</label>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input type="number" id="new-product-qty" min="0" step="0.1" placeholder="0.0" style="flex:1;">
+        <select id="new-product-unit" style="width:80px;">
+          <option value="kg">kg</option>
+          <option value="L">L</option>
+          <option value="u">unité</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Seuil d'alerte</label>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input type="number" id="new-product-seuil" min="0" step="0.1" placeholder="0.5" style="flex:1;">
+        <span id="new-product-unit-label" style="font-size:13px;color:var(--muted);min-width:28px;">kg</span>
+      </div>
+    </div>
+    <button class="btn-submit" id="btn-add-product" onclick="addNewProduct()">Ajouter le produit</button>
   </div>
 </div>
 
@@ -378,13 +432,14 @@ function showPage(p) {
   document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
   document.getElementById('page-' + p).classList.add('active');
-  document.querySelectorAll('.nav-item')[['stock','use','history','alerts','config'].indexOf(p)].classList.add('active');
+  document.querySelectorAll('.nav-item')[['stock','use','reappro','history','alerts','config'].indexOf(p)].classList.add('active');
   currentPage = p;
   if (p === 'stock') loadStock();
   if (p === 'history') loadHistory();
   if (p === 'alerts') renderAlerts();
   if (p === 'use') renderProductSelect();
   if (p === 'config') renderThresholds();
+  if (p === 'reappro') renderReapproSelect();
 }
 
 // ============================================================
@@ -682,6 +737,93 @@ function toast(msg, isErr = false) {
   t.className = 'toast show' + (isErr ? ' error' : '');
   setTimeout(() => t.className = 'toast', 3000);
 }
+
+// ============================================================
+// RÉAPPRO
+// ============================================================
+function renderReapproSelect() {
+  const sel = document.getElementById('reappro-product');
+  const fmt = n => parseFloat(n).toFixed(2).replace(/\.?0+$/, '');
+  sel.innerHTML = stockData.map(p =>
+    `<option value="${p.id}">${p.nom} (${fmt(p.quantite)} ${p.unite})</option>`
+  ).join('');
+  onReapproChange();
+}
+
+function onReapproChange() {
+  const p = stockData.find(x => x.id === document.getElementById('reappro-product').value);
+  if (p) document.getElementById('reappro-unit').textContent = p.unite;
+}
+
+async function recordReappro() {
+  const val = parseFloat(document.getElementById('reappro-qty').value);
+  if (isNaN(val) || val <= 0) { toast('Quantité invalide', true); return; }
+  const prodId = document.getElementById('reappro-product').value;
+  const product = stockData.find(p => p.id === prodId);
+  if (!product) return;
+
+  const newQty = product.quantite + val;
+  const btn = document.getElementById('btn-reappro');
+  btn.disabled = true; btn.textContent = 'Envoi...';
+
+  try {
+    const res = await apiPost({
+      action: 'updateStock',
+      productId: prodId,
+      productName: product.nom,
+      user: currentUser,
+      unit: product.unite,
+      newQty,
+      used: -val,
+      isReappro: true
+    });
+    if (res && res.status === 'ok') {
+      product.quantite = newQty;
+      document.getElementById('reappro-qty').value = '';
+      renderReapproSelect();
+      renderAlertsBadge();
+      toast(`+${val.toFixed(2)} ${product.unite} ajoutés — stock : ${newQty.toFixed(2)} ${product.unite}`);
+    } else { toast('Erreur : ' + (res?.error || 'inconnue'), true); }
+  } catch(e) { toast('Erreur réseau', true); }
+  btn.disabled = false; btn.textContent = 'Ajouter au stock';
+}
+
+// ============================================================
+// NOUVEAU PRODUIT
+// ============================================================
+document.getElementById('new-product-unit').addEventListener('change', function() {
+  document.getElementById('new-product-unit-label').textContent = this.value;
+});
+
+async function addNewProduct() {
+  const nom = document.getElementById('new-product-name').value.trim();
+  const qty = parseFloat(document.getElementById('new-product-qty').value);
+  const unite = document.getElementById('new-product-unit').value;
+  const seuil = parseFloat(document.getElementById('new-product-seuil').value) || 0;
+
+  if (!nom) { toast('Entrez un nom de produit', true); return; }
+  if (isNaN(qty) || qty < 0) { toast('Quantité invalide', true); return; }
+
+  const btn = document.getElementById('btn-add-product');
+  btn.disabled = true; btn.textContent = 'Ajout...';
+
+  try {
+    const res = await apiPost({
+      action: 'addProduct',
+      nom, qty, unite, seuil
+    });
+    if (res && res.status === 'ok') {
+      stockData.push({id: res.id, nom, quantite: qty, unite, seuil_alerte: seuil, derniere_maj: ''});
+      document.getElementById('new-product-name').value = '';
+      document.getElementById('new-product-qty').value = '';
+      document.getElementById('new-product-seuil').value = '';
+      renderReapproSelect();
+      toast(`Produit "${nom}" ajouté`);
+    } else { toast('Erreur : ' + (res?.error || 'inconnue'), true); }
+  } catch(e) { toast('Erreur réseau', true); }
+  btn.disabled = false; btn.textContent = 'Ajouter le produit';
+}
+
 </script>
 </body>
 </html>
