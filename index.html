@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Piscine">
+<meta name="theme-color" content="#0a5c6b">
+<title>Piscine — Stock</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --teal-900: #042d33;
+    --teal-800: #0a5c6b;
+    --teal-600: #0e8fa6;
+    --teal-400: #2fbdd4;
+    --teal-200: #a8e8f0;
+    --teal-50:  #edfbfd;
+    --amber: #e8a020;
+    --red:   #d94f3a;
+    --green: #2da05a;
+    --bg:    #f4f6f7;
+    --card:  #ffffff;
+    --text:  #111820;
+    --muted: #6b7784;
+    --border:#dde2e8;
+    --radius: 14px;
+    --radius-sm: 8px;
+    --shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding-bottom: 80px;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--teal-800);
+    color: white;
+    padding: 52px 20px 20px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-top { display: flex; align-items: center; justify-content: space-between; }
+  .header-title { font-size: 20px; font-weight: 600; letter-spacing: -0.3px; }
+  .header-date { font-size: 12px; opacity: 0.7; margin-top: 2px; font-family: 'DM Mono', monospace; }
+  .user-pills { display: flex; gap: 6px; margin-top: 14px; }
+  .user-pill {
+    padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 500;
+    border: 1.5px solid rgba(255,255,255,0.3); color: rgba(255,255,255,0.7);
+    background: transparent; cursor: pointer; transition: all 0.15s;
+  }
+  .user-pill.active { background: white; color: var(--teal-800); border-color: white; }
+
+  /* NAV BOTTOM */
+  .nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: white; border-top: 1px solid var(--border);
+    display: flex; z-index: 200;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .nav-item {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    padding: 10px 4px 8px; cursor: pointer; gap: 4px;
+    color: var(--muted); font-size: 10px; font-weight: 500; transition: color 0.15s;
+  }
+  .nav-item.active { color: var(--teal-800); }
+  .nav-icon { width: 22px; height: 22px; }
+
+  /* PAGES */
+  .page { display: none; padding: 16px; }
+  .page.active { display: block; }
+
+  /* CARDS */
+  .card {
+    background: var(--card); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 16px; margin-bottom: 12px;
+  }
+
+  /* STOCK GRID */
+  .stock-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .product-tile {
+    background: var(--card); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 14px 12px;
+    cursor: pointer; transition: transform 0.12s; position: relative;
+    border: 1.5px solid transparent;
+  }
+  .product-tile:active { transform: scale(0.97); }
+  .product-tile.alert-low { border-color: var(--amber); }
+  .product-tile.alert-critical { border-color: var(--red); }
+  .tile-name { font-size: 12px; font-weight: 500; color: var(--muted); line-height: 1.3; margin-bottom: 8px; }
+  .tile-qty { font-size: 22px; font-weight: 600; font-family: 'DM Mono', monospace; color: var(--text); }
+  .tile-unit { font-size: 11px; color: var(--muted); margin-left: 2px; }
+  .tile-bar { height: 3px; background: var(--border); border-radius: 2px; margin-top: 10px; overflow: hidden; }
+  .tile-bar-fill { height: 100%; border-radius: 2px; transition: width 0.4s ease; }
+  .bar-ok { background: var(--green); }
+  .bar-low { background: var(--amber); }
+  .bar-critical { background: var(--red); }
+  .tile-badge {
+    position: absolute; top: 8px; right: 8px;
+    width: 7px; height: 7px; border-radius: 50%;
+  }
+  .badge-low { background: var(--amber); }
+  .badge-critical { background: var(--red); }
+
+  /* FORM */
+  .form-label { font-size: 12px; font-weight: 500; color: var(--muted); margin-bottom: 6px; display: block; }
+  .form-group { margin-bottom: 14px; }
+  select, input[type=number], input[type=email], input[type=text] {
+    width: 100%; padding: 13px 14px;
+    border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif; font-size: 15px; color: var(--text);
+    background: white; appearance: none; -webkit-appearance: none;
+    outline: none; transition: border-color 0.15s;
+  }
+  select:focus, input:focus { border-color: var(--teal-600); }
+
+  .mode-row { display: flex; border: 1.5px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
+  .mode-btn {
+    flex: 1; padding: 11px 8px; font-size: 13px; font-weight: 500;
+    border: none; background: white; color: var(--muted); cursor: pointer; transition: all 0.15s;
+  }
+  .mode-btn.active { background: var(--teal-800); color: white; }
+
+  .btn-submit {
+    width: 100%; padding: 16px; border-radius: var(--radius);
+    background: var(--teal-800); color: white; border: none;
+    font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 600;
+    cursor: pointer; transition: all 0.15s; margin-top: 4px;
+  }
+  .btn-submit:active { transform: scale(0.98); background: var(--teal-900); }
+  .btn-submit:disabled { opacity: 0.6; }
+
+  .btn-secondary {
+    width: 100%; padding: 14px; border-radius: var(--radius);
+    background: white; color: var(--teal-800);
+    border: 1.5px solid var(--teal-800);
+    font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500;
+    cursor: pointer; transition: all 0.15s; margin-top: 8px;
+  }
+
+  /* HISTORY */
+  .hist-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 0; border-bottom: 1px solid var(--border);
+  }
+  .hist-item:last-child { border-bottom: none; }
+  .hist-avatar {
+    width: 34px; height: 34px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600; flex-shrink: 0;
+  }
+  .av-seb { background: #dff0fb; color: #1a6fa8; }
+  .av-sophie { background: #fce8f2; color: #a8346b; }
+  .hist-main { flex: 1; }
+  .hist-product { font-size: 14px; font-weight: 500; }
+  .hist-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .hist-qty { text-align: right; font-family: 'DM Mono', monospace; font-size: 13px; }
+  .hist-used { color: var(--red); }
+  .hist-remain { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  /* ALERTS */
+  .alert-pill {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 14px; border-radius: var(--radius-sm); margin-bottom: 8px;
+    font-size: 14px; font-weight: 500;
+  }
+  .alert-pill.critical { background: #fdecea; color: #b53628; border: 1px solid #f5b8b3; }
+  .alert-pill.low { background: #fdf4e3; color: #926212; border: 1px solid #f5d990; }
+  .alert-pill svg { flex-shrink: 0; }
+
+  /* CONFIG */
+  .threshold-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+  }
+  .threshold-row:last-child { border-bottom: none; }
+  .threshold-name { flex: 1; font-size: 13px; }
+  .threshold-input { width: 72px; padding: 7px 10px; font-size: 13px; }
+  .threshold-unit { font-size: 11px; color: var(--muted); min-width: 22px; }
+
+  /* STATES */
+  .loading {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; padding: 40px; color: var(--muted);
+  }
+  .spinner {
+    width: 28px; height: 28px;
+    border: 3px solid var(--border);
+    border-top-color: var(--teal-600);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    margin-bottom: 12px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .empty { text-align: center; padding: 32px; color: var(--muted); font-size: 14px; }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: var(--teal-900); color: white;
+    padding: 12px 22px; border-radius: 24px;
+    font-size: 14px; font-weight: 500; opacity: 0;
+    transition: all 0.25s; pointer-events: none; white-space: nowrap; z-index: 999;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.error { background: var(--red); }
+
+  /* URL CONFIG */
+  .url-banner {
+    background: #fff8e6; border: 1px solid #f5d990;
+    border-radius: var(--radius-sm); padding: 12px 14px;
+    margin-bottom: 14px; font-size: 13px; color: #7a5200;
+  }
+  .section-title { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-top">
+    <div>
+      <div class="header-title">🏊 Piscine — Stock</div>
+      <div class="header-date" id="hdate"></div>
+    </div>
+    <div id="sync-status" style="font-size:11px;opacity:0.7;"></div>
+  </div>
+  <div class="user-pills">
+    <button class="user-pill active" id="pill-seb" onclick="setUser('Seb')">Seb</button>
+    <button class="user-pill" id="pill-sophie" onclick="setUser('Sophie')">Sophie</button>
+  </div>
+</div>
+
+<!-- PAGES -->
+<div class="page active" id="page-stock">
+  <div id="stock-content"><div class="loading"><div class="spinner"></div>Chargement du stock...</div></div>
+</div>
+
+<div class="page" id="page-use">
+  <div id="use-config-banner"></div>
+  <div class="card">
+    <div class="form-group">
+      <label class="form-label">Produit</label>
+      <select id="sel-product" onchange="onProductChange()"></select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Mode de saisie</label>
+      <div class="mode-row">
+        <button class="mode-btn active" id="mode-used" onclick="setMode('used')">Quantité utilisée</button>
+        <button class="mode-btn" id="mode-remain" onclick="setMode('remaining')">Stock restant</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label" id="qty-label">Quantité utilisée</label>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input type="number" id="qty-input" min="0" step="0.1" placeholder="0.0" style="flex:1;">
+        <span id="unit-label" style="font-size:15px;font-weight:600;color:var(--teal-800);min-width:28px;"></span>
+      </div>
+    </div>
+    <button class="btn-submit" id="btn-record" onclick="recordUsage()">Enregistrer</button>
+  </div>
+</div>
+
+<div class="page" id="page-history">
+  <div id="hist-content"><div class="loading"><div class="spinner"></div>Chargement...</div></div>
+</div>
+
+<div class="page" id="page-alerts">
+  <div id="alerts-content"></div>
+</div>
+
+<div class="page" id="page-config">
+  <div id="config-url-section" class="card">
+    <div class="section-title">URL de l'API</div>
+    <div class="url-banner">
+      Collez ici l'URL de déploiement de votre Google Apps Script.
+    </div>
+    <div class="form-group">
+      <label class="form-label">URL Apps Script</label>
+      <input type="text" id="api-url-input" placeholder="https://script.google.com/macros/s/.../exec">
+    </div>
+    <button class="btn-submit" onclick="saveApiUrl()">Enregistrer l'URL</button>
+  </div>
+
+  <div class="card" id="thresholds-card">
+    <div class="section-title">Seuils d'alerte</div>
+    <div id="threshold-list"></div>
+    <button class="btn-submit" style="margin-top:12px;" onclick="saveThresholds()">Enregistrer les seuils</button>
+  </div>
+
+  <div class="card" style="margin-top:0;">
+    <div class="section-title">Initialisation</div>
+    <button class="btn-secondary" onclick="initSheet()">Initialiser le Google Sheet</button>
+    <div style="font-size:11px;color:var(--muted);margin-top:8px;">À lancer une seule fois lors de la première utilisation.</div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <div class="nav-item active" onclick="showPage('stock')">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    Stock
+  </div>
+  <div class="nav-item" onclick="showPage('use')">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+    Utiliser
+  </div>
+  <div class="nav-item" onclick="showPage('history')">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="12 8 12 12 14 14"/><path d="M3.05 11a9 9 0 1 0 .5-3"/><polyline points="3 4 3 11 10 11"/></svg>
+    Historique
+  </div>
+  <div class="nav-item" onclick="showPage('alerts')">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+    <span id="nav-alert-badge">Alertes</span>
+  </div>
+  <div class="nav-item" onclick="showPage('config')">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    Config
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// CONFIG & STATE
+// ============================================================
+const INITIAL_STOCK = [
+  {id:'chlore-choc',nom:'Chlore Choc',quantite:3.5,unite:'kg',seuil_alerte:0.5},
+  {id:'anti-algue',nom:"Anti-Algue SuperO'pool",quantite:0.5,unite:'L',seuil_alerte:0.1},
+  {id:'anti-calcaire',nom:'Anti-Calcaire Concentré',quantite:4.5,unite:'L',seuil_alerte:0.5},
+  {id:'pch-granule',nom:'PCH Granulé',quantite:4.5,unite:'kg',seuil_alerte:0.5},
+  {id:'diffaplus',nom:'Diffaplus Poudre',quantite:0.5,unite:'kg',seuil_alerte:0.1},
+  {id:'ph-plus',nom:'Ph+ Poudre',quantite:2.0,unite:'kg',seuil_alerte:0.3},
+  {id:'chlore-galet',nom:'Chlore Multi-Action Galets',quantite:4.5,unite:'kg',seuil_alerte:0.5},
+  {id:'tac-plus',nom:'TAC+',quantite:1.4,unite:'kg',seuil_alerte:0.2}
+];
+
+let apiUrl = localStorage.getItem('piscine_api_url') || 'https://script.google.com/macros/s/AKfycbxc0sZUi8OQXGWt2iJD5Eh26nUhbryl_lkR78xkTd8qdtsAXqoGXWkISHAq0ySEXp4/exec';
+let currentUser = localStorage.getItem('piscine_user') || 'Seb';
+let stockData = [];
+let inputMode = 'used';
+let currentPage = 'stock';
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('hdate').textContent = new Date().toLocaleDateString('fr-FR', {weekday:'long', day:'numeric', month:'long'});
+  setUser(currentUser);
+  if (apiUrl) {
+    document.getElementById('api-url-input').value = apiUrl || 'https://script.google.com/macros/s/AKfycbxc0sZUi8OQXGWt2iJD5Eh26nUhbryl_lkR78xkTd8qdtsAXqoGXWkISHAq0ySEXp4/exec';
+    loadStock();
+  } else {
+    renderStockLocal();
+    showBanner();
+  }
+});
+
+function showBanner() { }
+  document.getElementById('use-config-banner').innerHTML = `
+    <div class="url-banner">⚙️ Configurez d'abord l'URL de l'API dans <strong>Config</strong> pour activer la synchronisation.</div>`;
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function showPage(p) {
+  document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('page-' + p).classList.add('active');
+  document.querySelectorAll('.nav-item')[['stock','use','history','alerts','config'].indexOf(p)].classList.add('active');
+  currentPage = p;
+  if (p === 'stock') loadStock();
+  if (p === 'history') loadHistory();
+  if (p === 'alerts') renderAlerts();
+  if (p === 'use') renderProductSelect();
+  if (p === 'config') renderThresholds();
+}
+
+// ============================================================
+// USER
+// ============================================================
+function setUser(u) {
+  currentUser = u;
+  localStorage.setItem('piscine_user', u);
+  document.getElementById('pill-seb').className = 'user-pill' + (u === 'Seb' ? ' active' : '');
+  document.getElementById('pill-sophie').className = 'user-pill' + (u === 'Sophie' ? ' active' : '');
+}
+
+// ============================================================
+// API CALLS
+// ============================================================
+async function apiFetch(params) {
+  if (!apiUrl) return null;
+  const url = apiUrl + '?' + new URLSearchParams(params);
+  const r = await fetch(url);
+  return r.json();
+}
+
+async function apiPost(body) {
+  if (!apiUrl) return null;
+  const r = await fetch(apiUrl, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(body)
+  });
+  return r.json();
+}
+
+// ============================================================
+// STOCK
+// ============================================================
+async function loadStock() {
+  if (!apiUrl) { renderStockLocal(); return; }
+  document.getElementById('sync-status').textContent = '⟳ sync...';
+  try {
+    const data = await apiFetch({action: 'getStock'});
+    if (data && data.stock) {
+      stockData = data.stock.map(p => ({
+        ...p,
+        quantite: parseFloat(p.quantite),
+        seuil_alerte: parseFloat(p.seuil_alerte)
+      }));
+      document.getElementById('sync-status').textContent = '';
+      renderStock();
+      renderProductSelect();
+      renderAlertsBadge();
+    }
+  } catch(e) {
+    document.getElementById('sync-status').textContent = '⚠ offline';
+    renderStockLocal();
+  }
+}
+
+function renderStockLocal() {
+  if (!stockData.length) stockData = INITIAL_STOCK.map(p => ({...p}));
+  renderStock();
+}
+
+function getAlertLevel(p) {
+  if (p.quantite <= 0) return 'critical';
+  if (p.quantite <= p.seuil_alerte) return 'low';
+  return 'ok';
+}
+
+function getBarPct(p) {
+  const init = INITIAL_STOCK.find(x => x.id === p.id);
+  if (!init || init.quantite === 0) return 0;
+  return Math.min(100, Math.max(0, (p.quantite / init.quantite) * 100));
+}
+
+function renderStock() {
+  const pct = p => getBarPct(p);
+  const lvl = p => getAlertLevel(p);
+  const tileClass = p => lvl(p) === 'critical' ? 'alert-critical' : lvl(p) === 'low' ? 'alert-low' : '';
+  const barClass = p => lvl(p) === 'critical' ? 'bar-critical' : lvl(p) === 'low' ? 'bar-low' : 'bar-ok';
+  const badge = p => lvl(p) !== 'ok' ? `<div class="tile-badge ${lvl(p) === 'critical' ? 'badge-critical' : 'badge-low'}"></div>` : '';
+  const fmt = n => parseFloat(n).toFixed(2).replace(/\.?0+$/, '');
+
+  document.getElementById('stock-content').innerHTML = `
+    <div class="stock-grid">
+      ${stockData.map(p => `
+        <div class="product-tile ${tileClass(p)}" onclick="goUse('${p.id}')">
+          ${badge(p)}
+          <div class="tile-name">${p.nom}</div>
+          <div><span class="tile-qty">${fmt(p.quantite)}</span><span class="tile-unit"> ${p.unite}</span></div>
+          <div class="tile-bar"><div class="tile-bar-fill ${barClass(p)}" style="width:${pct(p)}%"></div></div>
+        </div>`).join('')}
+    </div>`;
+}
+
+function renderAlertsBadge() {
+  const n = stockData.filter(p => getAlertLevel(p) !== 'ok').length;
+  const badge = document.getElementById('nav-alert-badge');
+  badge.textContent = n > 0 ? `Alertes (${n})` : 'Alertes';
+}
+
+// ============================================================
+// USE FORM
+// ============================================================
+function renderProductSelect() {
+  const sel = document.getElementById('sel-product');
+  const fmt = n => parseFloat(n).toFixed(2).replace(/\.?0+$/, '');
+  sel.innerHTML = stockData.map(p =>
+    `<option value="${p.id}">${p.nom} (${fmt(p.quantite)} ${p.unite})</option>`
+  ).join('');
+  onProductChange();
+}
+
+function onProductChange() {
+  const p = stockData.find(x => x.id === document.getElementById('sel-product').value);
+  if (p) document.getElementById('unit-label').textContent = p.unite;
+}
+
+function goUse(id) {
+  showPage('use');
+  setTimeout(() => {
+    document.getElementById('sel-product').value = id;
+    onProductChange();
+  }, 50);
+}
+
+function setMode(m) {
+  inputMode = m;
+  document.getElementById('mode-used').className = 'mode-btn' + (m === 'used' ? ' active' : '');
+  document.getElementById('mode-remain').className = 'mode-btn' + (m === 'remaining' ? ' active' : '');
+  document.getElementById('qty-label').textContent = m === 'used' ? 'Quantité utilisée' : 'Stock restant';
+}
+
+async function recordUsage() {
+  const val = parseFloat(document.getElementById('qty-input').value);
+  if (isNaN(val) || val < 0) { toast('Valeur invalide', true); return; }
+
+  const prodId = document.getElementById('sel-product').value;
+  const product = stockData.find(p => p.id === prodId);
+  if (!product) return;
+
+  const used = inputMode === 'used' ? val : product.quantite - val;
+  const newQty = Math.max(0, inputMode === 'used' ? product.quantite - val : val);
+
+  if (!apiUrl) { toast('Configurez l\'URL API dans Config', true); return; }
+
+  const btn = document.getElementById('btn-record');
+  btn.disabled = true;
+  btn.textContent = 'Envoi...';
+
+  try {
+    const res = await apiPost({
+      action: 'updateStock',
+      productId: prodId,
+      productName: product.nom,
+      user: currentUser,
+      unit: product.unite,
+      newQty,
+      used
+    });
+
+    if (res && res.status === 'ok') {
+      product.quantite = newQty;
+      document.getElementById('qty-input').value = '';
+      renderProductSelect();
+      renderAlertsBadge();
+      const alertMsg = res.isEpuise ? ' — ⚠️ stock épuisé !' : res.isAlerte ? ' — ⚠️ stock bas !' : '';
+      toast(`Enregistré — ${newQty.toFixed(2)} ${product.unite} restants${alertMsg}`);
+    } else {
+      toast('Erreur : ' + (res?.error || 'inconnue'), true);
+    }
+  } catch(e) {
+    toast('Erreur réseau', true);
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Enregistrer';
+}
+
+// ============================================================
+// HISTORY
+// ============================================================
+async function loadHistory() {
+  if (!apiUrl) { document.getElementById('hist-content').innerHTML = '<div class="empty">Configurez l\'URL API dans Config</div>'; return; }
+  document.getElementById('hist-content').innerHTML = '<div class="loading"><div class="spinner"></div>Chargement...</div>';
+  try {
+    const data = await apiFetch({action: 'getHistory'});
+    if (data && data.history) renderHistory(data.history);
+  } catch(e) {
+    document.getElementById('hist-content').innerHTML = '<div class="empty">Erreur de chargement</div>';
+  }
+}
+
+function renderHistory(history) {
+  if (!history.length) {
+    document.getElementById('hist-content').innerHTML = '<div class="empty">Aucune utilisation enregistrée</div>';
+    return;
+  }
+  const fmt = n => Math.abs(parseFloat(n)).toFixed(2);
+  const rows = history.map(h => {
+    const initials = h.utilisateur === 'Sophie' ? 'SO' : 'SB';
+    const avClass = h.utilisateur === 'Sophie' ? 'av-sophie' : 'av-seb';
+    return `<div class="hist-item">
+      <div class="hist-avatar ${avClass}">${initials}</div>
+      <div class="hist-main">
+        <div class="hist-product">${h.produit_nom}</div>
+        <div class="hist-meta">${h.utilisateur} · ${h.timestamp}</div>
+      </div>
+      <div class="hist-qty">
+        <div class="hist-used">−${fmt(h.quantite_utilisee)} ${h.unite}</div>
+        <div class="hist-remain">reste ${parseFloat(h.stock_restant).toFixed(2)}</div>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('hist-content').innerHTML = `<div class="card">${rows}</div>`;
+}
+
+// ============================================================
+// ALERTS
+// ============================================================
+function renderAlerts() {
+  const alerts = stockData.filter(p => getAlertLevel(p) !== 'ok');
+  if (!alerts.length) {
+    document.getElementById('alerts-content').innerHTML = `
+      <div class="card"><div class="empty" style="padding:24px;">✅ Tous les stocks sont suffisants</div></div>`;
+    return;
+  }
+  const fmt = p => `${parseFloat(p.quantite).toFixed(2)} ${p.unite}`;
+  document.getElementById('alerts-content').innerHTML = `
+    <div style="margin-bottom:12px;">
+      ${alerts.map(p => {
+        const lvl = getAlertLevel(p);
+        const msg = lvl === 'critical' ? 'Stock épuisé — à racheter !' : `Stock bas (${fmt(p)} restants)`;
+        return `<div class="alert-pill ${lvl}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <div><strong>${p.nom}</strong><br><span style="font-size:12px;font-weight:400;">${msg}</span></div>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+// ============================================================
+// CONFIG
+// ============================================================
+function saveApiUrl() {
+  const url = document.getElementById('api-url-input').value.trim();
+  apiUrl = url;
+  localStorage.setItem('piscine_api_url', url);
+  toast('URL enregistrée');
+  if (url) { loadStock(); document.getElementById('use-config-banner').innerHTML = ''; }
+}
+
+async function initSheet() {
+  if (!apiUrl) { toast('Configurez d\'abord l\'URL API', true); return; }
+  try {
+    const data = await apiFetch({action: 'init'});
+    toast(data?.message || 'Sheet initialisé');
+  } catch(e) { toast('Erreur', true); }
+}
+
+function renderThresholds() {
+  const fmt = n => parseFloat(n).toFixed(2).replace(/\.?0+$/, '');
+  document.getElementById('threshold-list').innerHTML = stockData.map(p => `
+    <div class="threshold-row">
+      <span class="threshold-name">${p.nom}</span>
+      <input type="number" class="threshold-input" id="th-${p.id}" value="${fmt(p.seuil_alerte)}" min="0" step="0.05">
+      <span class="threshold-unit">${p.unite}</span>
+    </div>`).join('');
+}
+
+async function saveThresholds() {
+  if (!apiUrl) { toast('Configurez l\'URL API', true); return; }
+  for (const p of stockData) {
+    const inp = document.getElementById('th-' + p.id);
+    if (!inp) continue;
+    const val = parseFloat(inp.value);
+    p.seuil_alerte = val;
+    await apiPost({action: 'updateThreshold', productId: p.id, seuil: val});
+  }
+  toast('Seuils enregistrés');
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+function toast(msg, isErr = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isErr ? ' error' : '');
+  setTimeout(() => t.className = 'toast', 3000);
+}
+</script>
+</body>
+</html>
