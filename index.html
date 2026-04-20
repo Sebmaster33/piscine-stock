@@ -220,6 +220,24 @@
     display: flex; flex-direction: column; align-items: center;
     justify-content: center; padding: 40px; color: var(--muted);
   }
+  .meteo-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(100px,1fr)); gap:8px; margin-bottom:12px; }
+  .meteo-tile { background:var(--bg); border-radius:var(--radius-sm); padding:10px; text-align:center; }
+  .meteo-val { font-size:20px; font-weight:600; font-family:'DM Mono',monospace; color:var(--teal-800); }
+  .meteo-label { font-size:11px; color:var(--muted); margin-top:2px; }
+  .forecast-row { display:flex; gap:6px; overflow-x:auto; padding-bottom:4px; }
+  .forecast-day { flex-shrink:0; background:var(--bg); border-radius:var(--radius-sm); padding:8px 10px; text-align:center; min-width:64px; }
+  .forecast-day .day { font-size:11px; font-weight:500; color:var(--muted); }
+  .forecast-day .temp { font-size:14px; font-weight:600; color:var(--text); font-family:'DM Mono',monospace; }
+  .forecast-day .rain { font-size:11px; color:#185FA5; margin-top:2px; }
+  .releve-item { display:flex; flex-direction:column; gap:4px; padding:10px 0; border-bottom:1px solid var(--border); }
+  .releve-item:last-child { border-bottom:none; }
+  .releve-header { display:flex; align-items:center; justify-content:space-between; }
+  .releve-date { font-size:12px; font-weight:500; color:var(--muted); }
+  .releve-user { font-size:11px; color:var(--muted); }
+  .releve-values { display:flex; flex-wrap:wrap; gap:6px; margin-top:4px; }
+  .releve-pill { background:var(--bg); border-radius:6px; padding:3px 8px; font-size:12px; font-family:'DM Mono',monospace; }
+  .releve-pill.alert { background:#fdecea; color:#b53628; }
+  .releve-notes { font-size:12px; color:var(--muted); font-style:italic; margin-top:2px; }
   .spinner {
     width: 28px; height: 28px;
     border: 3px solid var(--border);
@@ -310,6 +328,61 @@
   <div id="alerts-content"></div>
 </div>
 
+<div class="page" id="page-releves">
+  <div class="card" id="meteo-card">
+    <div class="section-title" style="margin-bottom:10px;">Météo — Martillac</div>
+    <div id="meteo-content"><div style="font-size:13px;color:var(--muted);">Chargement météo...</div></div>
+  </div>
+
+  <div class="card" style="margin-top:0;">
+    <div class="section-title" style="margin-bottom:14px;">Nouveau relevé</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label">pH <span style="font-size:10px;color:var(--muted);">(6.8 – 7.6)</span></label>
+        <input type="number" id="rel-ph" step="0.1" min="0" max="14" placeholder="7.2">
+      </div>
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label">TAC <span style="font-size:10px;color:var(--muted);">(mg/L)</span></label>
+        <input type="number" id="rel-tac" step="1" min="0" placeholder="120">
+      </div>
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label">TH <span style="font-size:10px;color:var(--muted);">(mg/L)</span></label>
+        <input type="number" id="rel-th" step="1" min="0" placeholder="150">
+      </div>
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label">Chlore libre <span style="font-size:10px;color:var(--muted);">(mg/L)</span></label>
+        <input type="number" id="rel-chlore" step="0.1" min="0" placeholder="1.5">
+      </div>
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label">Sel <span style="font-size:10px;color:var(--muted);">(g/L)</span></label>
+        <input type="number" id="rel-sel" step="0.1" min="0" placeholder="4.0">
+      </div>
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label">Stabilisant <span style="font-size:10px;color:var(--muted);">(mg/L)</span></label>
+        <input type="number" id="rel-stabilisant" step="1" min="0" placeholder="30">
+      </div>
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label">Temp. eau <span style="font-size:10px;color:var(--muted);">(°C)</span></label>
+        <input type="number" id="rel-temp-eau" step="0.5" min="0" placeholder="26">
+      </div>
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label">Temp. air <span style="font-size:10px;color:var(--muted);">(°C — auto)</span></label>
+        <input type="number" id="rel-temp-air" step="0.5" placeholder="28" readonly style="background:var(--bg);color:var(--muted);">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Observations (optionnel)</label>
+      <input type="text" id="rel-notes" placeholder="ex: eau légèrement trouble, ajout de floculant...">
+    </div>
+    <button class="btn-submit" id="btn-releve" onclick="saveReleve()">Enregistrer le relevé</button>
+  </div>
+
+  <div class="card" style="margin-top:0;">
+    <div class="section-title" style="margin-bottom:10px;">Historique des relevés <span style="font-size:10px;font-weight:400;">(4 semaines)</span></div>
+    <div id="releves-history"><div style="font-size:13px;color:var(--muted);padding:8px 0;">Chargement...</div></div>
+  </div>
+</div>
+
 <div class="page" id="page-config">
   <div id="config-url-section" class="card">
     <div class="section-title">URL de l'API</div>
@@ -341,6 +414,10 @@
   <div class="nav-item active" onclick="showPage('stock')">
     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
     Stock
+  </div>
+  <div class="nav-item" onclick="showPage('releves')">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 20h20M6 20V10m4 10V4m4 16v-6m4 6v-8"/></svg>
+    Relevés
   </div>
   <div class="nav-item" onclick="showPage('use')">
     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
@@ -456,13 +533,14 @@ function showPage(p) {
   document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
   document.getElementById('page-' + p).classList.add('active');
-  document.querySelectorAll('.nav-item')[['stock','use','reappro','history','alerts','config'].indexOf(p)].classList.add('active');
+  document.querySelectorAll('.nav-item')[['stock','releves','use','reappro','history','alerts','config'].indexOf(p)].classList.add('active');
   currentPage = p;
   if (p === 'stock') loadStock();
   if (p === 'history') loadHistory();
   if (p === 'alerts') renderAlerts();
   if (p === 'use') renderProductSelect();
   if (p === 'config') renderThresholds();
+  if (p === 'releves') { loadMeteo(); loadRelevesHistory(); }
   if (p === 'reappro') renderReapproSelect();
 }
 
@@ -920,6 +998,151 @@ async function annulerAction(idx) {
       loadHistory();
     } else { toast('Erreur annulation', true); }
   } catch(e) { toast('Erreur réseau', true); }
+}
+
+
+// ============================================================
+// MÉTÉO — Open-Meteo (Martillac 44.7215°N, 0.5156°W)
+// ============================================================
+const METEO_LAT = 44.7215;
+const METEO_LON = -0.5156;
+let lastTempAir = null;
+
+async function loadMeteo() {
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${METEO_LAT}&longitude=${METEO_LON}&current=temperature_2m,precipitation,weathercode,windspeed_10m&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weathercode&timezone=Europe%2FParis&forecast_days=5`;
+    const r = await fetch(url);
+    const d = await r.json();
+    renderMeteo(d);
+    lastTempAir = d.current.temperature_2m;
+    document.getElementById('rel-temp-air').value = lastTempAir;
+  } catch(e) {
+    document.getElementById('meteo-content').innerHTML = '<div style="font-size:13px;color:var(--muted);">Météo indisponible</div>';
+  }
+}
+
+function weatherIcon(code) {
+  if (code === 0) return '☀️';
+  if (code <= 3) return '⛅';
+  if (code <= 48) return '🌫️';
+  if (code <= 67) return '🌧️';
+  if (code <= 77) return '🌨️';
+  if (code <= 82) return '🌦️';
+  return '⛈️';
+}
+
+function renderMeteo(d) {
+  const cur = d.current;
+  const daily = d.daily;
+  const days = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+
+  const forecast = daily.time.map((t, i) => {
+    const date = new Date(t);
+    const label = i === 0 ? "Auj." : i === 1 ? "Dem." : days[date.getDay()];
+    return `<div class="forecast-day">
+      <div class="day">${label}</div>
+      <div style="font-size:18px;margin:4px 0;">${weatherIcon(daily.weathercode[i])}</div>
+      <div class="temp">${Math.round(daily.temperature_2m_max[i])}° / ${Math.round(daily.temperature_2m_min[i])}°</div>
+      <div class="rain">${daily.precipitation_sum[i] > 0 ? daily.precipitation_sum[i].toFixed(1)+'mm' : '—'}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('meteo-content').innerHTML = `
+    <div class="meteo-grid">
+      <div class="meteo-tile"><div class="meteo-val">${Math.round(cur.temperature_2m)}°C</div><div class="meteo-label">Température</div></div>
+      <div class="meteo-tile"><div class="meteo-val">${weatherIcon(cur.weathercode)}</div><div class="meteo-label">Conditions</div></div>
+      <div class="meteo-tile"><div class="meteo-val">${cur.precipitation > 0 ? cur.precipitation+'mm' : '0'}</div><div class="meteo-label">Précipitations</div></div>
+      <div class="meteo-tile"><div class="meteo-val">${Math.round(cur.windspeed_10m)}</div><div class="meteo-label">Vent km/h</div></div>
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Prévisions 5 jours</div>
+    <div class="forecast-row">${forecast}</div>`;
+}
+
+// ============================================================
+// RELEVÉS
+// ============================================================
+async function saveReleve() {
+  const vals = {
+    ph: document.getElementById('rel-ph').value,
+    tac: document.getElementById('rel-tac').value,
+    th: document.getElementById('rel-th').value,
+    chlore: document.getElementById('rel-chlore').value,
+    sel: document.getElementById('rel-sel').value,
+    stabilisant: document.getElementById('rel-stabilisant').value,
+    temp_eau: document.getElementById('rel-temp-eau').value,
+    temp_air: document.getElementById('rel-temp-air').value,
+    notes: document.getElementById('rel-notes').value
+  };
+
+  if (!vals.ph && !vals.chlore && !vals.temp_eau) {
+    toast('Remplissez au moins pH, chlore ou température eau', true); return;
+  }
+
+  const btn = document.getElementById('btn-releve');
+  btn.disabled = true; btn.textContent = 'Envoi...';
+
+  try {
+    const res = await apiPost({
+      action: 'saveReleve',
+      user: currentUser,
+      ...vals
+    });
+    if (res && res.status === 'ok') {
+      ['ph','tac','th','chlore','sel','stabilisant','temp_eau','notes'].forEach(id => {
+        document.getElementById('rel-' + id).value = '';
+      });
+      toast('Relevé enregistré');
+      loadRelevesHistory();
+    } else { toast('Erreur : ' + (res?.error || 'inconnue'), true); }
+  } catch(e) { toast('Erreur réseau', true); }
+
+  btn.disabled = false; btn.textContent = 'Enregistrer le relevé';
+}
+
+async function loadRelevesHistory() {
+  try {
+    const data = await apiFetch({action: 'getReleves'});
+    if (data && data.releves) renderRelevesHistory(data.releves);
+  } catch(e) {
+    document.getElementById('releves-history').innerHTML = '<div style="font-size:13px;color:var(--muted);">Erreur de chargement</div>';
+  }
+}
+
+function renderRelevesHistory(releves) {
+  if (!releves.length) {
+    document.getElementById('releves-history').innerHTML = '<div style="font-size:13px;color:var(--muted);padding:8px 0;">Aucun relevé enregistré</div>';
+    return;
+  }
+
+  const phAlert = v => v && (parseFloat(v) < 6.8 || parseFloat(v) > 7.6);
+  const chloreAlert = v => v && (parseFloat(v) < 0.5 || parseFloat(v) > 3.0);
+
+  const rows = releves.map(r => {
+    const pills = [
+      r.ph ? `<span class="releve-pill ${phAlert(r.ph)?'alert':''}">pH ${r.ph}</span>` : '',
+      r.tac ? `<span class="releve-pill">TAC ${r.tac}</span>` : '',
+      r.th ? `<span class="releve-pill">TH ${r.th}</span>` : '',
+      r.chlore ? `<span class="releve-pill ${chloreAlert(r.chlore)?'alert':''}">Cl ${r.chlore}</span>` : '',
+      r.sel ? `<span class="releve-pill">Sel ${r.sel}</span>` : '',
+      r.stabilisant ? `<span class="releve-pill">Stab. ${r.stabilisant}</span>` : '',
+      r.temp_eau ? `<span class="releve-pill">💧 ${r.temp_eau}°C</span>` : '',
+      r.temp_air ? `<span class="releve-pill">🌡 ${r.temp_air}°C</span>` : '',
+    ].filter(Boolean).join('');
+
+    const avClass = r.utilisateur === 'Sophie' ? 'av-sophie' : 'av-seb';
+    const initials = r.utilisateur === 'Sophie' ? 'SO' : 'SB';
+
+    return `<div class="releve-item">
+      <div class="releve-header">
+        <span class="releve-date">${r.timestamp}</span>
+        <div class="hist-avatar ${avClass}" style="width:24px;height:24px;font-size:10px;">${initials}</div>
+      </div>
+      <div class="releve-values">${pills}</div>
+      ${r.notes ? `<div class="releve-notes">${r.notes}</div>` : ''}
+    </div>`;
+  }).join('');
+
+  document.getElementById('releves-history').innerHTML = rows;
 }
 
 </script>
