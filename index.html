@@ -336,39 +336,79 @@
 
   <div class="card" style="margin-top:0;">
     <div class="section-title" style="margin-bottom:14px;">Nouveau relevé</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
-      <div class="form-group" style="margin-bottom:0;">
-        <label class="form-label">pH <span style="font-size:10px;color:var(--muted);">(6.8 – 7.6)</span></label>
-        <input type="number" id="rel-ph" step="0.1" min="0" max="14" placeholder="7.2">
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;">
+
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="flex:1;">
+          <label class="form-label">pH <span style="font-size:10px;color:var(--muted);">(cible 6.8–7.6)</span></label>
+          <input type="number" id="rel-ph" step="0.1" min="0" max="14" placeholder="7.2">
+        </div>
+        <div style="width:90px;padding-top:18px;">
+          <select id="rel-ph-unit"><option value="—">—</option></select>
+        </div>
       </div>
-      <div class="form-group" style="margin-bottom:0;">
-        <label class="form-label">TAC <span style="font-size:10px;color:var(--muted);">(mg/L)</span></label>
-        <input type="number" id="rel-tac" step="1" min="0" placeholder="120">
+
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="flex:1;">
+          <label class="form-label">Free Chlorine / Chlore libre <span style="font-size:10px;color:var(--muted);">(cible 1–3)</span></label>
+          <input type="number" id="rel-chlore" step="0.1" min="0" placeholder="1.5">
+        </div>
+        <div style="width:90px;padding-top:18px;">
+          <select id="rel-chlore-unit"><option value="mg/L">mg/L</option><option value="ppm">ppm</option></select>
+        </div>
       </div>
-      <div class="form-group" style="margin-bottom:0;">
-        <label class="form-label">TH <span style="font-size:10px;color:var(--muted);">(mg/L)</span></label>
-        <input type="number" id="rel-th" step="1" min="0" placeholder="150">
+
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="flex:1;">
+          <label class="form-label">Total Alkalinity / TAC <span style="font-size:10px;color:var(--muted);">(cible 80–120)</span></label>
+          <input type="number" id="rel-tac" step="1" min="0" placeholder="100">
+        </div>
+        <div style="width:90px;padding-top:18px;">
+          <select id="rel-tac-unit"><option value="mg/L">mg/L</option><option value="ppm">ppm</option></select>
+        </div>
       </div>
-      <div class="form-group" style="margin-bottom:0;">
-        <label class="form-label">Chlore libre <span style="font-size:10px;color:var(--muted);">(mg/L)</span></label>
-        <input type="number" id="rel-chlore" step="0.1" min="0" placeholder="1.5">
+
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="flex:1;">
+          <label class="form-label">Hardness / Dureté (TH) <span style="font-size:10px;color:var(--muted);">(cible 100–250)</span></label>
+          <input type="number" id="rel-th" step="1" min="0" placeholder="150">
+        </div>
+        <div style="width:90px;padding-top:18px;">
+          <select id="rel-th-unit"><option value="mg/L">mg/L</option><option value="ppm">ppm</option><option value="°f">°f</option></select>
+        </div>
       </div>
-      <div class="form-group" style="margin-bottom:0;">
-        <label class="form-label">Sel <span style="font-size:10px;color:var(--muted);">(g/L)</span></label>
-        <input type="number" id="rel-sel" step="0.1" min="0" placeholder="4.0">
+
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="flex:1;">
+          <label class="form-label">Stabilizer / Stabilisant (acide cyanurique) <span style="font-size:10px;color:var(--muted);">(cible 20–50)</span></label>
+          <input type="number" id="rel-stabilisant" step="1" min="0" placeholder="30">
+        </div>
+        <div style="width:90px;padding-top:18px;">
+          <select id="rel-stabilisant-unit"><option value="mg/L">mg/L</option><option value="ppm">ppm</option></select>
+        </div>
       </div>
-      <div class="form-group" style="margin-bottom:0;">
-        <label class="form-label">Stabilisant <span style="font-size:10px;color:var(--muted);">(mg/L)</span></label>
-        <input type="number" id="rel-stabilisant" step="1" min="0" placeholder="30">
+
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="flex:1;">
+          <label class="form-label">Sel / Salt <span style="font-size:10px;color:var(--muted);">(cible 3–5)</span></label>
+          <input type="number" id="rel-sel" step="0.1" min="0" placeholder="4.0">
+        </div>
+        <div style="width:90px;padding-top:18px;">
+          <select id="rel-sel-unit"><option value="g/L">g/L</option><option value="ppm">ppm</option><option value="kg/m³">kg/m³</option></select>
+        </div>
       </div>
-      <div class="form-group" style="margin-bottom:0;">
-        <label class="form-label">Temp. eau <span style="font-size:10px;color:var(--muted);">(°C)</span></label>
-        <input type="number" id="rel-temp-eau" step="0.5" min="0" placeholder="26">
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">Temp. eau 💧 (°C)</label>
+          <input type="number" id="rel-temp-eau" step="0.5" min="0" placeholder="26">
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">Temp. air 🌡 (°C — auto)</label>
+          <input type="number" id="rel-temp-air" step="0.5" placeholder="28" readonly style="background:var(--bg);color:var(--muted);">
+        </div>
       </div>
-      <div class="form-group" style="margin-bottom:0;">
-        <label class="form-label">Temp. air <span style="font-size:10px;color:var(--muted);">(°C — auto)</span></label>
-        <input type="number" id="rel-temp-air" step="0.5" placeholder="28" readonly style="background:var(--bg);color:var(--muted);">
-      </div>
+
     </div>
     <div class="form-group">
       <label class="form-label">Observations (optionnel)</label>
@@ -1062,16 +1102,23 @@ function renderMeteo(d) {
 // RELEVÉS
 // ============================================================
 async function saveReleve() {
+  const gv = id => document.getElementById(id).value;
   const vals = {
-    ph: document.getElementById('rel-ph').value,
-    tac: document.getElementById('rel-tac').value,
-    th: document.getElementById('rel-th').value,
-    chlore: document.getElementById('rel-chlore').value,
-    sel: document.getElementById('rel-sel').value,
-    stabilisant: document.getElementById('rel-stabilisant').value,
-    temp_eau: document.getElementById('rel-temp-eau').value,
-    temp_air: document.getElementById('rel-temp-air').value,
-    notes: document.getElementById('rel-notes').value
+    ph: gv('rel-ph'),
+    ph_unit: '—',
+    tac: gv('rel-tac'),
+    tac_unit: gv('rel-tac-unit'),
+    th: gv('rel-th'),
+    th_unit: gv('rel-th-unit'),
+    chlore: gv('rel-chlore'),
+    chlore_unit: gv('rel-chlore-unit'),
+    sel: gv('rel-sel'),
+    sel_unit: gv('rel-sel-unit'),
+    stabilisant: gv('rel-stabilisant'),
+    stabilisant_unit: gv('rel-stabilisant-unit'),
+    temp_eau: gv('rel-temp-eau'),
+    temp_air: gv('rel-temp-air'),
+    notes: gv('rel-notes')
   };
 
   if (!vals.ph && !vals.chlore && !vals.temp_eau) {
@@ -1089,7 +1136,8 @@ async function saveReleve() {
     });
     if (res && res.status === 'ok') {
       ['ph','tac','th','chlore','sel','stabilisant','temp_eau','notes'].forEach(id => {
-        document.getElementById('rel-' + id).value = '';
+        const el = document.getElementById('rel-' + id);
+        if (el) el.value = '';
       });
       toast('Relevé enregistré');
       loadRelevesHistory();
@@ -1118,13 +1166,14 @@ function renderRelevesHistory(releves) {
   const chloreAlert = v => v && (parseFloat(v) < 0.5 || parseFloat(v) > 3.0);
 
   const rows = releves.map(r => {
+    const u = (val, unit) => unit && unit !== '—' ? `${val} ${unit}` : val;
     const pills = [
       r.ph ? `<span class="releve-pill ${phAlert(r.ph)?'alert':''}">pH ${r.ph}</span>` : '',
-      r.tac ? `<span class="releve-pill">TAC ${r.tac}</span>` : '',
-      r.th ? `<span class="releve-pill">TH ${r.th}</span>` : '',
-      r.chlore ? `<span class="releve-pill ${chloreAlert(r.chlore)?'alert':''}">Cl ${r.chlore}</span>` : '',
-      r.sel ? `<span class="releve-pill">Sel ${r.sel}</span>` : '',
-      r.stabilisant ? `<span class="releve-pill">Stab. ${r.stabilisant}</span>` : '',
+      r.chlore ? `<span class="releve-pill ${chloreAlert(r.chlore)?'alert':''}">Cl libre ${u(r.chlore, r.chlore_unit)}</span>` : '',
+      r.tac ? `<span class="releve-pill">TAC ${u(r.tac, r.tac_unit)}</span>` : '',
+      r.th ? `<span class="releve-pill">TH ${u(r.th, r.th_unit)}</span>` : '',
+      r.stabilisant ? `<span class="releve-pill">Stab. ${u(r.stabilisant, r.stabilisant_unit)}</span>` : '',
+      r.sel ? `<span class="releve-pill">Sel ${u(r.sel, r.sel_unit)}</span>` : '',
       r.temp_eau ? `<span class="releve-pill">💧 ${r.temp_eau}°C</span>` : '',
       r.temp_air ? `<span class="releve-pill">🌡 ${r.temp_air}°C</span>` : '',
     ].filter(Boolean).join('');
