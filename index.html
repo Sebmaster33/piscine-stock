@@ -46,7 +46,7 @@
     color: var(--text);
     min-height: 100vh;
     padding-bottom: 80px;
-    padding-top: 140px;
+    padding-top: 180px;
   }
 
   /* HEADER */
@@ -107,16 +107,16 @@
   .stock-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .product-tile {
     background: var(--card); border-radius: var(--radius);
-    box-shadow: var(--shadow); padding: 14px 12px;
+    box-shadow: var(--shadow); padding: 18px 14px;
     cursor: pointer; transition: transform 0.12s; position: relative;
     border: 1.5px solid transparent;
   }
   .product-tile:active { transform: scale(0.97); }
   .product-tile.alert-low { border-color: var(--amber); }
   .product-tile.alert-critical { border-color: var(--red); }
-  .tile-name { font-size: 12px; font-weight: 500; color: var(--muted); line-height: 1.3; margin-bottom: 8px; }
-  .tile-qty { font-size: 22px; font-weight: 600; font-family: 'DM Mono', monospace; color: var(--text); }
-  .tile-unit { font-size: 11px; color: var(--muted); margin-left: 2px; }
+  .tile-name { font-size: 16px; font-weight: 600; color: var(--teal-800); line-height: 1.3; margin-bottom: 10px; }
+  .tile-qty { font-size: 30px; font-weight: 600; font-family: 'DM Mono', monospace; color: var(--text); }
+  .tile-unit { font-size: 15px; font-weight: 500; color: var(--teal-600); margin-left: 4px; }
   .tile-bar { height: 3px; background: var(--border); border-radius: 2px; margin-top: 10px; overflow: hidden; }
   .tile-bar-fill { height: 100%; border-radius: 2px; transition: width 0.4s ease; }
   .bar-ok { background: var(--green); }
@@ -287,6 +287,9 @@
     </button>
     <button class="user-pill active" id="pill-seb" onclick="setUser('Seb')">Seb</button>
     <button class="user-pill" id="pill-sophie" onclick="setUser('Sophie')">Sophie</button>
+  </div>
+  <div id="header-meteo" style="display:flex;gap:10px;margin-top:10px;overflow-x:auto;padding-bottom:2px;">
+    <div style="font-size:11px;opacity:0.6;">Chargement météo...</div>
   </div>
 </div>
 
@@ -562,6 +565,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderStockLocal();
     showBanner();
   }
+  loadHeaderMeteo();
 });
 
 function showBanner() { }
@@ -1192,6 +1196,42 @@ function renderRelevesHistory(releves) {
   }).join('');
 
   document.getElementById('releves-history').innerHTML = rows;
+}
+
+
+// ============================================================
+// MÉTÉO HEADER — 3 prochains jours
+// ============================================================
+async function loadHeaderMeteo() {
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${METEO_LAT}&longitude=${METEO_LON}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weathercode&timezone=Europe%2FParis&forecast_days=4`;
+    const r = await fetch(url);
+    const d = await r.json();
+    renderHeaderMeteo(d.daily);
+  } catch(e) {
+    document.getElementById('header-meteo').innerHTML = '';
+  }
+}
+
+function renderHeaderMeteo(daily) {
+  const days = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+  const html = daily.time.slice(1, 4).map((t, i) => {
+    const idx = i + 1;
+    const date = new Date(t);
+    const label = i === 0 ? 'Demain' : days[date.getDay()];
+    const icon = weatherIcon(daily.weathercode[idx]);
+    const max = Math.round(daily.temperature_2m_max[idx]);
+    const min = Math.round(daily.temperature_2m_min[idx]);
+    const rain = daily.precipitation_sum[idx];
+    return `<div style="display:flex;align-items:center;gap:5px;background:rgba(255,255,255,0.12);border-radius:8px;padding:5px 10px;flex-shrink:0;">
+      <span style="font-size:14px;">${icon}</span>
+      <div>
+        <div style="font-size:11px;font-weight:600;opacity:0.9;">${label}</div>
+        <div style="font-size:12px;font-weight:500;">${max}° <span style="opacity:0.6;">${min}°</span>${rain > 0 ? ` <span style="font-size:10px;color:#a8e8f0;">${rain.toFixed(0)}mm</span>` : ''}</div>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('header-meteo').innerHTML = html;
 }
 
 </script>
