@@ -1227,6 +1227,19 @@ async function loadRelevesHistory() {
   }
 }
 
+function formatTimestamp(ts) {
+  if (!ts) return '';
+  // Si c'est déjà au format dd/mm/yyyy HH:mm
+  if (typeof ts === 'string' && ts.includes('/')) return ts;
+  // Si c'est un timestamp ISO ou objet Date
+  try {
+    const d = new Date(ts);
+    if (isNaN(d.getTime())) return String(ts);
+    return d.toLocaleDateString('fr-FR', {day:'2-digit',month:'2-digit',year:'numeric'}) 
+      + ' ' + d.toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit'});
+  } catch(e) { return String(ts); }
+}
+
 function renderRelevesHistory(releves) {
   if (!releves.length) {
     document.getElementById('releves-history').innerHTML = '<div style="font-size:13px;color:var(--muted);padding:8px 0;">Aucun relevé enregistré</div>';
@@ -1245,8 +1258,8 @@ function renderRelevesHistory(releves) {
       r.th ? `<span class="releve-pill">TH ${u(r.th, r.th_unit)}</span>` : '',
       r.stabilisant ? `<span class="releve-pill">Stab. ${u(r.stabilisant, r.stabilisant_unit)}</span>` : '',
       r.sel ? `<span class="releve-pill">Sel ${u(r.sel, r.sel_unit)}</span>` : '',
-      r.temp_eau ? `<span class="releve-pill">💧 ${r.temp_eau}°C</span>` : '',
-      r.temp_air ? `<span class="releve-pill">🌡 ${r.temp_air}°C</span>` : '',
+      r.temp_eau && String(r.temp_eau).trim() ? `<span class="releve-pill">💧 ${r.temp_eau}°C</span>` : '',
+      r.temp_air && String(r.temp_air).trim() ? `<span class="releve-pill">🌡 ${r.temp_air}°C</span>` : '',
     ].filter(Boolean).join('');
 
     const avClass = r.utilisateur === 'Sophie' ? 'av-sophie' : 'av-seb';
@@ -1254,7 +1267,7 @@ function renderRelevesHistory(releves) {
 
     return `<div class="releve-item">
       <div class="releve-header">
-        <span class="releve-date">${r.timestamp}</span>
+        <span class="releve-date">${formatTimestamp(r.timestamp)}</span>
         <div class="hist-avatar ${avClass}" style="width:24px;height:24px;font-size:10px;">${initials}</div>
       </div>
       <div class="releve-values">${pills}</div>
