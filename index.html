@@ -46,7 +46,7 @@
     color: var(--text);
     min-height: 100vh;
     padding-bottom: 80px;
-    padding-top: 180px;
+    padding-top: 200px;
   }
 
   /* HEADER */
@@ -105,6 +105,9 @@
 
   /* STOCK GRID */
   .stock-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 400px) { .stock-grid { grid-template-columns: 1fr; } }
+  @media (min-width: 700px) { .stock-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (min-width: 1000px) { .stock-grid { grid-template-columns: repeat(4, 1fr); } }
   .product-tile {
     background: var(--card); border-radius: var(--radius);
     box-shadow: var(--shadow); padding: 18px 14px;
@@ -281,15 +284,17 @@
     </div>
     <div id="sync-status" style="font-size:11px;opacity:0.7;"></div>
   </div>
-  <div class="user-pills">
-    <button onclick="showPage('stock')" style="background:rgba(255,255,255,0.15);border:1.5px solid rgba(255,255,255,0.3);border-radius:20px;padding:6px 10px;cursor:pointer;display:flex;align-items:center;justify-content:center;" title="Accueil">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-    </button>
-    <button class="user-pill active" id="pill-seb" onclick="setUser('Seb')">Seb</button>
-    <button class="user-pill" id="pill-sophie" onclick="setUser('Sophie')">Sophie</button>
-  </div>
-  <div id="header-meteo" style="display:flex;gap:10px;margin-top:10px;overflow-x:auto;padding-bottom:2px;">
-    <div style="font-size:11px;opacity:0.6;">Chargement météo...</div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;gap:8px;">
+    <div class="user-pills" style="margin-top:0;">
+      <button onclick="showPage('stock')" style="background:rgba(255,255,255,0.15);border:1.5px solid rgba(255,255,255,0.3);border-radius:20px;padding:6px 10px;cursor:pointer;display:flex;align-items:center;justify-content:center;" title="Accueil">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      </button>
+      <button class="user-pill active" id="pill-seb" onclick="setUser('Seb')">Seb</button>
+      <button class="user-pill" id="pill-sophie" onclick="setUser('Sophie')">Sophie</button>
+    </div>
+    <div id="header-meteo" style="display:flex;gap:8px;overflow-x:auto;flex-shrink:0;">
+      <div style="font-size:11px;opacity:0.6;">...</div>
+    </div>
   </div>
 </div>
 
@@ -1224,7 +1229,7 @@ function renderHeaderMeteo(daily) {
     const min = Math.round(daily.temperature_2m_min[idx]);
     const rain = daily.precipitation_sum[idx];
     return `<div style="display:flex;align-items:center;gap:5px;background:rgba(255,255,255,0.12);border-radius:8px;padding:5px 10px;flex-shrink:0;">
-      <span style="font-size:14px;">${icon}</span>
+      <span style="font-size:22px;line-height:1;">${icon}</span>
       <div>
         <div style="font-size:11px;font-weight:600;opacity:0.9;">${label}</div>
         <div style="font-size:12px;font-weight:500;">${max}° <span style="opacity:0.6;">${min}°</span>${rain > 0 ? ` <span style="font-size:10px;color:#a8e8f0;">${rain.toFixed(0)}mm</span>` : ''}</div>
