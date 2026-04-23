@@ -399,6 +399,11 @@
 
   <div class="card" style="margin-top:0;">
     <div class="section-title" style="margin-bottom:14px;">Nouveau relevé</div>
+    <div style="margin-bottom:12px;">
+      <label class="form-label">Date du relevé</label>
+      <input type="datetime-local" id="rel-date" style="width:100%;">
+    </div>
+
     <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;">
 
       <div style="display:flex;align-items:center;gap:8px;">
@@ -686,7 +691,7 @@ function showPage(p) {
   if (p === 'alerts') renderAlerts();
   if (p === 'use') renderProductSelect();
   if (p === 'config') renderThresholds();
-  if (p === 'releves') { loadMeteo(); loadRelevesHistory(); }
+  if (p === 'releves') { loadMeteo(); loadRelevesHistory(); initReleveDate(); }
   if (p === 'home') loadRecommandations();
   if (p === 'stock') loadStock();
   if (p === 'reappro') renderReapproSelect();
@@ -1239,6 +1244,7 @@ async function saveReleve() {
     const res = await apiPost({
       action: 'saveReleve',
       user: currentUser,
+      custom_date: document.getElementById('rel-date').value,
       ...vals
     });
     if (res && res.status === 'ok') {
@@ -1261,6 +1267,12 @@ async function loadRelevesHistory() {
   } catch(e) {
     document.getElementById('releves-history').innerHTML = '<div style="font-size:13px;color:var(--muted);">Erreur de chargement</div>';
   }
+}
+
+function initReleveDate() {
+  const now = new Date();
+  const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+  document.getElementById('rel-date').value = local.toISOString().slice(0, 16);
 }
 
 function formatTimestamp(ts) {
