@@ -235,10 +235,10 @@
   .releve-item { display:flex; flex-direction:column; gap:4px; padding:10px 0; border-bottom:1px solid var(--border); }
   .releve-item:last-child { border-bottom:none; }
   .releve-header { display:flex; align-items:center; justify-content:space-between; }
-  .releve-date { font-size:12px; font-weight:500; color:var(--muted); }
+    .releve-date { font-size: 13px; font-weight: 600; color: var(--text); }
   .releve-user { font-size:11px; color:var(--muted); }
   .releve-values { display:flex; flex-wrap:wrap; gap:6px; margin-top:4px; }
-  .releve-pill { background:var(--bg); border-radius:6px; padding:3px 8px; font-size:12px; font-family:'DM Mono',monospace; }
+    .releve-pill { background: var(--bg); border-radius: 6px; padding: 4px 10px; font-size: 13px; font-family: 'DM Mono', monospace; border: 0.5px solid var(--border); }
   .releve-pill.alert { background:#fdecea; color:#b53628; }
   .releve-notes { font-size:12px; color:var(--muted); font-style:italic; margin-top:2px; }
   .action-item {
@@ -431,15 +431,7 @@
         </div>
       </div>
 
-      <div style="display:flex;align-items:center;gap:8px;">
-        <div style="flex:1;">
-          <label class="form-label">Hardness / Dureté (TH) <span style="font-size:10px;color:var(--muted);">(cible 100–250)</span></label>
-          <input type="number" id="rel-th" step="1" min="0" placeholder="150">
-        </div>
-        <div style="width:90px;padding-top:18px;">
-          <select id="rel-th-unit"><option value="mg/L">mg/L</option><option value="ppm">ppm</option><option value="°f">°f</option></select>
-        </div>
-      </div>
+
 
       <div style="display:flex;align-items:center;gap:8px;">
         <div style="flex:1;">
@@ -590,6 +582,51 @@
       </div>
     </div>
     <button class="btn-submit" id="btn-add-product" onclick="addNewProduct()">Ajouter le produit</button>
+  </div>
+</div>
+
+<div id="edit-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:500;align-items:flex-end;justify-content:center;">
+  <div style="background:white;border-radius:16px 16px 0 0;padding:20px;width:100%;max-width:600px;max-height:85vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div style="font-size:15px;font-weight:600;">Modifier le relevé</div>
+      <button onclick="closeEditModal()" style="font-size:20px;border:none;background:none;cursor:pointer;color:var(--muted);">✕</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+      <div><label class="form-label">pH</label><input type="number" id="edit-ph" step="0.1" min="0" max="14" placeholder="7.2"></div>
+      <div>
+        <label class="form-label">Free Chlorine / Cl libre</label>
+        <div style="display:flex;gap:6px;">
+          <input type="number" id="edit-chlore" step="0.1" min="0" placeholder="1.5" style="flex:1;">
+          <select id="edit-chlore-unit" style="width:70px;"><option value="mg/L">mg/L</option><option value="ppm">ppm</option></select>
+        </div>
+      </div>
+      <div>
+        <label class="form-label">TAC</label>
+        <div style="display:flex;gap:6px;">
+          <input type="number" id="edit-tac" step="1" min="0" placeholder="100" style="flex:1;">
+          <select id="edit-tac-unit" style="width:70px;"><option value="mg/L">mg/L</option><option value="ppm">ppm</option></select>
+        </div>
+      </div>
+      <div>
+        <label class="form-label">Stabilisant</label>
+        <div style="display:flex;gap:6px;">
+          <input type="number" id="edit-stabilisant" step="1" min="0" placeholder="30" style="flex:1;">
+          <select id="edit-stabilisant-unit" style="width:70px;"><option value="mg/L">mg/L</option><option value="ppm">ppm</option></select>
+        </div>
+      </div>
+      <div>
+        <label class="form-label">Sel</label>
+        <div style="display:flex;gap:6px;">
+          <input type="number" id="edit-sel" step="0.1" min="0" placeholder="4.0" style="flex:1;">
+          <select id="edit-sel-unit" style="width:70px;"><option value="g/L">g/L</option><option value="ppm">ppm</option></select>
+        </div>
+      </div>
+      <div><label class="form-label">Temp. eau 💧 (°C)</label><input type="number" id="edit-temp-eau" step="0.5" placeholder="26"></div>
+      <div><label class="form-label">Temp. air 🌡 (°C)</label><input type="number" id="edit-temp-air" step="0.5" placeholder="28"></div>
+    </div>
+    <div style="margin-bottom:12px;"><label class="form-label">Observations</label><input type="text" id="edit-notes" placeholder=""></div>
+    <input type="hidden" id="edit-row-index">
+    <button class="btn-submit" onclick="saveEditReleve()">Enregistrer les modifications</button>
   </div>
 </div>
 
@@ -1179,8 +1216,7 @@ async function saveReleve() {
     ph_unit: '—',
     tac: gv('rel-tac'),
     tac_unit: gv('rel-tac-unit'),
-    th: gv('rel-th'),
-    th_unit: gv('rel-th-unit'),
+
     chlore: gv('rel-chlore'),
     chlore_unit: gv('rel-chlore-unit'),
     sel: gv('rel-sel'),
@@ -1241,6 +1277,7 @@ function formatTimestamp(ts) {
 }
 
 function renderRelevesHistory(releves) {
+  editRelevesCache = releves.map((r, i) => ({...r, row_index: i}));
   if (!releves.length) {
     document.getElementById('releves-history').innerHTML = '<div style="font-size:13px;color:var(--muted);padding:8px 0;">Aucun relevé enregistré</div>';
     return;
@@ -1250,16 +1287,17 @@ function renderRelevesHistory(releves) {
   const chloreAlert = v => v && (parseFloat(v) < 0.5 || parseFloat(v) > 3.0);
 
   const rows = releves.map(r => {
-    const u = (val, unit) => unit && unit !== '—' ? `${val} ${unit}` : val;
+    const u = (val, unit) => (unit && unit !== '—' && unit !== '') ? `${val} ${unit}` : val;
+    const hasVal = v => v !== '' && v !== null && v !== undefined && String(v).trim() !== '' && String(v).trim() !== '0';
     const pills = [
-      r.ph ? `<span class="releve-pill ${phAlert(r.ph)?'alert':''}">pH ${r.ph}</span>` : '',
-      r.chlore ? `<span class="releve-pill ${chloreAlert(r.chlore)?'alert':''}">Cl libre ${u(r.chlore, r.chlore_unit)}</span>` : '',
-      r.tac ? `<span class="releve-pill">TAC ${u(r.tac, r.tac_unit)}</span>` : '',
-      r.th ? `<span class="releve-pill">TH ${u(r.th, r.th_unit)}</span>` : '',
-      r.stabilisant ? `<span class="releve-pill">Stab. ${u(r.stabilisant, r.stabilisant_unit)}</span>` : '',
-      r.sel ? `<span class="releve-pill">Sel ${u(r.sel, r.sel_unit)}</span>` : '',
-      r.temp_eau && String(r.temp_eau).trim() ? `<span class="releve-pill">💧 ${r.temp_eau}°C</span>` : '',
-      r.temp_air && String(r.temp_air).trim() ? `<span class="releve-pill">🌡 ${r.temp_air}°C</span>` : '',
+      hasVal(r.ph) ? `<span class="releve-pill ${phAlert(r.ph)?'alert':''}">pH ${r.ph}</span>` : '',
+      hasVal(r.chlore) ? `<span class="releve-pill ${chloreAlert(r.chlore)?'alert':''}">Cl libre ${u(r.chlore, r.chlore_unit)}</span>` : '',
+      hasVal(r.tac) ? `<span class="releve-pill">TAC ${u(r.tac, r.tac_unit)}</span>` : '',
+
+      hasVal(r.stabilisant) ? `<span class="releve-pill">Stabilisant ${u(r.stabilisant, r.stabilisant_unit)}</span>` : '',
+      hasVal(r.sel) ? `<span class="releve-pill">Sel ${u(r.sel, r.sel_unit)}</span>` : '',
+      hasVal(r.temp_eau) ? `<span class="releve-pill">💧 Eau ${r.temp_eau}°C</span>` : '',
+      hasVal(r.temp_air) ? `<span class="releve-pill">🌡 Air ${r.temp_air}°C</span>` : '',
     ].filter(Boolean).join('');
 
     const avClass = r.utilisateur === 'Sophie' ? 'av-sophie' : 'av-seb';
@@ -1268,7 +1306,10 @@ function renderRelevesHistory(releves) {
     return `<div class="releve-item">
       <div class="releve-header">
         <span class="releve-date">${formatTimestamp(r.timestamp)}</span>
-        <div class="hist-avatar ${avClass}" style="width:24px;height:24px;font-size:10px;">${initials}</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button onclick="editReleve(${idx})" style="font-size:11px;padding:3px 8px;border-radius:8px;border:0.5px solid var(--border);background:var(--bg);color:var(--muted);cursor:pointer;">Modifier</button>
+          <div class="hist-avatar ${avClass}" style="width:24px;height:24px;font-size:10px;">${initials}</div>
+        </div>
       </div>
       <div class="releve-values">${pills}</div>
       ${r.notes ? `<div class="releve-notes">${r.notes}</div>` : ''}
@@ -1284,18 +1325,33 @@ function renderRelevesHistory(releves) {
 // ============================================================
 async function loadHeaderMeteo() {
   try {
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${METEO_LAT}&longitude=${METEO_LON}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weathercode&timezone=Europe%2FParis&forecast_days=4`;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${METEO_LAT}&longitude=${METEO_LON}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weathercode&current=temperature_2m,weathercode,precipitation&timezone=Europe%2FParis&forecast_days=4`;
     const r = await fetch(url);
     const d = await r.json();
-    renderHeaderMeteo(d.daily);
+    renderHeaderMeteo(d.daily, d.current);
   } catch(e) {
     document.getElementById('header-meteo').innerHTML = '';
   }
 }
 
-function renderHeaderMeteo(daily) {
+function renderHeaderMeteo(daily, current) {
   const days = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
-  const html = daily.time.slice(1, 4).map((t, i) => {
+  
+  // Aujourd'hui
+  const todayIcon = current ? weatherIcon(current.weathercode) : weatherIcon(daily.weathercode[0]);
+  const todayTemp = current ? Math.round(current.temperature_2m) : Math.round(daily.temperature_2m_max[0]);
+  const todayMin = Math.round(daily.temperature_2m_min[0]);
+  const todayRain = daily.precipitation_sum[0];
+  
+  const todayHtml = `<div style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.18);border-radius:8px;padding:5px 10px;flex-shrink:0;border:1px solid rgba(255,255,255,0.2);">
+    <span style="font-size:26px;line-height:1;">${todayIcon}</span>
+    <div>
+      <div style="font-size:11px;font-weight:700;opacity:1;">Auj.</div>
+      <div style="font-size:13px;font-weight:600;">${todayTemp}° <span style="opacity:0.6;font-size:11px;">${todayMin}°</span>${todayRain > 0 ? ` <span style="font-size:10px;color:#a8e8f0;">${todayRain.toFixed(0)}mm</span>` : ''}</div>
+    </div>
+  </div>`;
+
+  const nextDays = daily.time.slice(1, 4).map((t, i) => {
     const idx = i + 1;
     const date = new Date(t);
     const label = i === 0 ? 'Demain' : days[date.getDay()];
@@ -1303,15 +1359,16 @@ function renderHeaderMeteo(daily) {
     const max = Math.round(daily.temperature_2m_max[idx]);
     const min = Math.round(daily.temperature_2m_min[idx]);
     const rain = daily.precipitation_sum[idx];
-    return `<div style="display:flex;align-items:center;gap:5px;background:rgba(255,255,255,0.12);border-radius:8px;padding:5px 10px;flex-shrink:0;">
-      <span style="font-size:22px;line-height:1;">${icon}</span>
+    return `<div style="display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.12);border-radius:8px;padding:5px 10px;flex-shrink:0;">
+      <span style="font-size:24px;line-height:1;">${icon}</span>
       <div>
-        <div style="font-size:11px;font-weight:600;opacity:0.9;">${label}</div>
-        <div style="font-size:12px;font-weight:500;">${max}° <span style="opacity:0.6;">${min}°</span>${rain > 0 ? ` <span style="font-size:10px;color:#a8e8f0;">${rain.toFixed(0)}mm</span>` : ''}</div>
+        <div style="font-size:11px;font-weight:600;opacity:0.85;">${label}</div>
+        <div style="font-size:12px;font-weight:500;">${max}° <span style="opacity:0.6;font-size:11px;">${min}°</span>${rain > 0 ? ` <span style="font-size:10px;color:#a8e8f0;">${rain.toFixed(0)}mm</span>` : ''}</div>
       </div>
     </div>`;
   }).join('');
-  document.getElementById('header-meteo').innerHTML = html;
+
+  document.getElementById('header-meteo').innerHTML = todayHtml + nextDays;
 }
 
 
@@ -1487,6 +1544,73 @@ async function toggleAction(idx) {
     try {
       await apiPost({action: 'unmarkActionDone', action_id: a.id});
     } catch(e) { console.error(e); }
+  }
+}
+
+
+// ============================================================
+// ÉDITION DES RELEVÉS
+// ============================================================
+let editRelevesCache = [];
+
+function editReleve(idx) {
+  const r = editRelevesCache[idx];
+  if (!r) return;
+
+  document.getElementById('edit-ph').value = r.ph || '';
+  document.getElementById('edit-chlore').value = r.chlore || '';
+  document.getElementById('edit-chlore-unit').value = r.chlore_unit || 'mg/L';
+  document.getElementById('edit-tac').value = r.tac || '';
+  document.getElementById('edit-tac-unit').value = r.tac_unit || 'mg/L';
+  document.getElementById('edit-stabilisant').value = r.stabilisant || '';
+  document.getElementById('edit-stabilisant-unit').value = r.stabilisant_unit || 'mg/L';
+  document.getElementById('edit-sel').value = r.sel || '';
+  document.getElementById('edit-sel-unit').value = r.sel_unit || 'g/L';
+  document.getElementById('edit-temp-eau').value = r.temp_eau || '';
+  document.getElementById('edit-temp-air').value = r.temp_air || '';
+  document.getElementById('edit-notes').value = r.notes || '';
+  document.getElementById('edit-row-index').value = r.row_index || idx;
+
+  const modal = document.getElementById('edit-modal');
+  modal.style.display = 'flex';
+}
+
+function closeEditModal() {
+  document.getElementById('edit-modal').style.display = 'none';
+}
+
+async function saveEditReleve() {
+  const rowIndex = document.getElementById('edit-row-index').value;
+  const gv = id => document.getElementById(id).value;
+
+  const data = {
+    action: 'updateReleve',
+    row_index: rowIndex,
+    ph: gv('edit-ph'),
+    chlore: gv('edit-chlore'),
+    chlore_unit: gv('edit-chlore-unit'),
+    tac: gv('edit-tac'),
+    tac_unit: gv('edit-tac-unit'),
+    stabilisant: gv('edit-stabilisant'),
+    stabilisant_unit: gv('edit-stabilisant-unit'),
+    sel: gv('edit-sel'),
+    sel_unit: gv('edit-sel-unit'),
+    temp_eau: gv('edit-temp-eau'),
+    temp_air: gv('edit-temp-air'),
+    notes: gv('edit-notes')
+  };
+
+  try {
+    const res = await apiPost(data);
+    if (res && res.status === 'ok') {
+      closeEditModal();
+      toast('Relevé modifié');
+      loadRelevesHistory();
+    } else {
+      toast('Erreur : ' + (res?.error || 'inconnue'), true);
+    }
+  } catch(e) {
+    toast('Erreur réseau', true);
   }
 }
 
