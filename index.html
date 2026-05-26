@@ -711,11 +711,10 @@ function setUser(u) {
 // ============================================================
 // API CALLS
 // ============================================================
-let _apiFetchCounter = 0;
 function apiFetch(params) {
   return new Promise((resolve, reject) => {
     if (!apiUrl) { resolve(null); return; }
-    const cb = 'cb_' + Date.now() + '_' + (++_apiFetchCounter);
+    const cb = 'cb_' + Date.now();
     const url = apiUrl + '?' + new URLSearchParams({...params, callback: cb});
     const script = document.createElement('script');
     const timeout = setTimeout(() => { delete window[cb]; script.remove(); reject(new Error('timeout')); }, 10000);
@@ -1299,7 +1298,7 @@ function renderRelevesHistory(releves) {
   const phAlert = v => v && (parseFloat(v) < 6.8 || parseFloat(v) > 7.6);
   const chloreAlert = v => v && (parseFloat(v) < 0.5 || parseFloat(v) > 3.0);
 
-  const rows = releves.map(r => {
+  const rows = releves.map((r, i) => {
     const u = (val, unit) => (unit && unit !== '—' && unit !== '') ? `${val} ${unit}` : val;
     const hasVal = v => v !== '' && v !== null && v !== undefined && String(v).trim() !== '' && String(v).trim() !== '0';
     const pills = [
@@ -1320,7 +1319,7 @@ function renderRelevesHistory(releves) {
       <div class="releve-header">
         <span class="releve-date">${formatTimestamp(r.timestamp)}</span>
         <div style="display:flex;align-items:center;gap:8px;">
-          <button onclick="editReleve(${idx})" style="font-size:11px;padding:3px 8px;border-radius:8px;border:0.5px solid var(--border);background:var(--bg);color:var(--muted);cursor:pointer;">Modifier</button>
+          <button onclick="editReleve(${i})" style="font-size:11px;padding:3px 8px;border-radius:8px;border:0.5px solid var(--border);background:var(--bg);color:var(--muted);cursor:pointer;">Modifier</button>
           <div class="hist-avatar ${avClass}" style="width:24px;height:24px;font-size:10px;">${initials}</div>
         </div>
       </div>
