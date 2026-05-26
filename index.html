@@ -1425,9 +1425,16 @@ async function loadRecommandations() {
 
 async function fetchMeteoForReco() {
   try {
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${METEO_LAT}&longitude=${METEO_LON}&daily=temperature_2m_max,precipitation_sum,weathercode&timezone=Europe%2FParis&forecast_days=4&current=temperature_2m,precipitation`;
-    const r = await fetch(url);
-    return await r.json();
+    // Météo future (3 prochains jours)
+    const urlFuture = `https://api.open-meteo.com/v1/forecast?latitude=${METEO_LAT}&longitude=${METEO_LON}&daily=temperature_2m_max,precipitation_sum,weathercode&timezone=Europe%2FParis&forecast_days=4&current=temperature_2m,precipitation`;
+    const rFuture = await fetch(urlFuture);
+    const future = await rFuture.json();
+
+    // Météo passée depuis le sheet GAS
+    const passeeRes = await apiFetch({action: 'getMeteo'});
+    const passee = passeeRes?.meteo || [];
+
+    return { future, passee };
   } catch(e) { return null; }
 }
 
@@ -1463,38 +1470,95 @@ function genererReglesFixe(stock, releves) {
   return actions;
 }
 
-async function analyserAvecClaude(stock, releves, history, meteo) {
+async function analyserAvecClaude(stock, releves, history, meteoBundle) {
   try {
     const dernierReleve = releves[0];
-    if (!dernierReleve) return [];
 
-    const meteoTxt = meteo ? `Températures max prévues (3 jours) : ${meteo.daily?.temperature_2m_max?.slice(1,4).map(t=>Math.round(t)+'°C').join(', ')}. Précipitations : ${meteo.daily?.precipitation_sum?.slice(1,4).map(p=>p+'mm').join(', ')}.` : 'Météo non disponible.';
-    const traitements = history.slice(0,5).map(h=>`- ${h.timestamp} : ${h.utilisateur} — ${h.produit_nom} (${Math.abs(parseFloat(h.quantite_utilisee)).toFixed(2)} ${h.unite})`).join('\n');
-    const stockCritique = stock.filter(p=>parseFloat(p.quantite)<=parseFloat(p.seuil_alerte)*1.5).map(p=>`${p.nom}: ${parseFloat(p.quantite).toFixed(2)} ${p.unite}`).join(', ');
+    const future = meteoBundle?.future;
+    const meteoFutureTxt = future
+      ? (future.daily?.temperature_2m_max?.slice(1,4).map((t,i) =>
+          `  J+${i+1}: ${Math.round(t)}°C, ${future.daily.precipitation_sum[i+1] || 0}mm pluie`
+        ).join('\n'))
+      : '  Non disponible';
 
-    const prompt = `Tu es un expert en chimie de piscine. Analyse ces données et génère 1 à 4 recommandations d'actions concrètes NON couvertes par les alertes chimiques de base.
+    const passee = meteoBundle?.passee || [];
+    const meteoPasseeTxt = passee.length
+      ? passee.slice(-7).map(m =>
+          `  ${m.date}: ${m.temp_max}°C max / ${m.temp_min}°C min, ${m.precipitation}mm pluie`
+        ).join('\n')
+      : '  Pas encore de données historiques';
 
-DERNIER RELEVÉ (${dernierReleve.timestamp}) :
-pH: ${dernierReleve.ph||'N/R'}, Chlore libre: ${dernierReleve.chlore||'N/R'} ${dernierReleve.chlore_unit||''}, TAC: ${dernierReleve.tac||'N/R'}, TH: ${dernierReleve.th||'N/R'}, Sel: ${dernierReleve.sel||'N/R'}, Stabilisant: ${dernierReleve.stabilisant||'N/R'}, Temp eau: ${dernierReleve.temp_eau||'N/R'}°C
+    const releveSection = dernierReleve
+      ? `DERNIER RELEVÉ (${dernierReleve.timestamp}) :
+- pH : ${dernierReleve.ph || 'N/R'} (cible : 7.2–7.4)
+- Chlore libre : ${dernierReleve.chlore || 'N/R'} ${dernierReleve.chlore_unit || 'mg/L'} (cible : 0.5–1.5 mg/L)
+- TAC : ${dernierReleve.tac || 'N/R'} ${dernierReleve.tac_unit || 'mg/L'} (cible : 80–120 mg/L)
+- Stabilisant : ${dernierReleve.stabilisant || 'N/R'} ${dernierReleve.stabilisant_unit || 'mg/L'} (cible : 20–40 mg/L)
+- Sel : ${dernierReleve.sel || 'N/R'} ${dernierReleve.sel_unit || 'g/L'} (cible : 4–6 g/L)
+- Température eau : ${dernierReleve.temp_eau || 'N/R'}°C`
+      : 'DERNIER RELEVÉ : Aucun relevé — baser les recommandations sur la météo, les stocks et la saison.';
 
-MÉTÉO PROCHAINS JOURS :
-${meteoTxt}
+    const traitements = history.slice(0,5).map(h =>
+      `  - ${h.timestamp} : ${h.utilisateur} — ${h.produit_nom} (${Math.abs(parseFloat(h.quantite_utilisee)).toFixed(2)} ${h.unite})`
+    ).join('\n') || '  Aucun traitement enregistré';
+
+    const stocksListe = stock.map(p =>
+      `  - ${p.nom}: ${parseFloat(p.quantite).toFixed(2)} ${p.unite}${parseFloat(p.quantite) <= parseFloat(p.seuil_alerte) ? ' ⚠️ bas' : ''}`
+    ).join('\n');
+
+    const prompt = `Tu es un technicien expert en entretien de piscine au sel. Analyse toutes les données et génère des recommandations concrètes avec produits et dosages précis.
+
+CONTEXTE PISCINE :
+- Type : piscine au sel avec électrolyseur
+- Volume : 56 000 litres (56 m³)
+- Localisation : Martillac (Gironde)
+
+${releveSection}
+
+FENÊTRE D'ÉQUILIBRE DE L'EAU (diagramme de Langelier) :
+- Zone d'équilibre : TAC 80–250 mg/L, pH 6.8–7.4
+- Zone entartrante : TAC > 250 mg/L → Anti-Calcaire Concentré
+- Zone agressive/corrosive : TAC < 80 mg/L → TAC+ en priorité
+- RÈGLE ABSOLUE : corriger la TAC AVANT d'ajuster le pH
+
+MÉTÉO PASSÉE (7 derniers jours) :
+${meteoPasseeTxt}
+
+MÉTÉO À VENIR (3 prochains jours) :
+${meteoFutureTxt}
 
 DERNIERS TRAITEMENTS :
-${traitements || 'Aucun traitement enregistré'}
+${traitements}
 
-STOCKS PROCHES DU SEUIL : ${stockCritique || 'Aucun'}
+STOCKS DISPONIBLES :
+${stocksListe}
 
-Réponds UNIQUEMENT en JSON valide, tableau d'objets avec ces champs exactement :
-[{"id":"ia-1","title":"Titre court","desc":"Description actionnable en 1-2 phrases","urgency":"high|medium|low","date":"Ex: Aujourd'hui, Cette semaine, Avant le weekend"}]
+RÈGLES DE RAISONNEMENT ET DOSAGES (pour 56 m³) :
+1. TAC basse → TAC+ : ~500g par +10 mg/L sur 56m³ ; verser le matin, pompe en marche
+2. TAC haute → Anti-Calcaire Concentré ; ajuster pH ensuite
+3. pH trop bas → Ph+ Poudre : ~400g pour +0.2 pH sur 56m³ ; verser en soirée près des buses
+4. pH trop haut → Ph- : ~350g pour -0.2 pH sur 56m³ ; verser en soirée
+5. Chlore bas + stabilisant OK → Chlore Choc : 1,1kg pour 56m³ ; verser le soir, filtration 12h
+6. Chlore bas + stabilisant < 20 mg/L → traiter stabilisant d'abord (PCH Granulé), puis choc chlore
+7. Stabilisant bas + soleil prévu → chlore se dégrade rapidement, risque algues élevé
+8. Température eau > 28°C ou chaleur prolongée → consommation de chlore doublée, anticiper
+9. Pluie > 20mm récente ou à venir → vérifier sel, TAC et chlore dans les 24h
+10. Sel hors cible → 1kg sel = +0.018 g/L sur 56m³ ; électrolyseur inefficace si sel < 4 g/L
+11. Anti-Algue préventif → Anti-Algue SuperO'pool : 150mL/semaine en saison
+12. Pas de traitement depuis > 7 jours → contrôle systématique de tous les paramètres
+13. TOUJOURS formuler au moins 1 recommandation même si tout est équilibré
 
-Considère la météo (chaleur → plus de chlore, pluie → dilution), l'historique des traitements, la cohérence des valeurs. Maximum 4 actions. Si tout va bien, retourne [].`;
+ORDRE DE PRIORITÉ : 1. TAC → 2. pH → 3. Chlore → 4. Stabilisant → 5. Sel → 6. Anti-algue préventif
+
+Réponds UNIQUEMENT en JSON valide, sans texte avant ni après :
+[{"id":"ia-1","title":"Titre court (max 6 mots)","desc":"Action précise : produit exact, dose pour 56 000L, moment, zone d'application.","urgency":"high|medium|low","date":"Aujourd'hui|Ce soir|Demain|Cette semaine|Avant le weekend"}]
+Maximum 4 recommandations, triées par urgence décroissante.`;
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-haiku-4-5-20251001',
         max_tokens: 800,
         messages: [{role:'user', content: prompt}]
       })
@@ -1510,7 +1574,6 @@ Considère la météo (chaleur → plus de chlore, pluie → dilution), l'histor
     return [];
   }
 }
-
 function renderRecommandations() {
   const el = document.getElementById('reco-content');
   const pending = recoActions.filter(a => !a.done);
