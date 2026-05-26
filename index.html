@@ -711,10 +711,13 @@ function setUser(u) {
 // ============================================================
 // API CALLS
 // ============================================================
+let _cbCounter = 0;
+function _uniqueCb() { return 'cb_' + Date.now() + '_' + (++_cbCounter); }
+
 function apiFetch(params) {
   return new Promise((resolve, reject) => {
     if (!apiUrl) { resolve(null); return; }
-    const cb = 'cb_' + Date.now();
+    const cb = _uniqueCb();
     const url = apiUrl + '?' + new URLSearchParams({...params, callback: cb});
     const script = document.createElement('script');
     const timeout = setTimeout(() => { delete window[cb]; script.remove(); reject(new Error('timeout')); }, 10000);
@@ -728,9 +731,7 @@ function apiFetch(params) {
 function apiPost(body) {
   return new Promise((resolve, reject) => {
     if (!apiUrl) { resolve(null); return; }
-    const cb = 'cb_' + Date.now();
-    const params = new URLSearchParams({...body, callback: cb});
-    // Sérialise les valeurs complexes
+    const cb = _uniqueCb();
     const flat = {callback: cb};
     for (const [k, v] of Object.entries(body)) {
       flat[k] = typeof v === 'object' ? JSON.stringify(v) : v;
@@ -1419,7 +1420,7 @@ async function loadRecommandations() {
     renderRecommandations();
   } catch(e) {
     console.error(e);
-    document.getElementById('reco-content').innerHTML = '<div style="font-size:13px;color:var(--muted);">Données insuffisantes — effectuez d\'abord un relevé.</div>';
+    document.getElementById('reco-content').innerHTML = '<div style="font-size:13px;color:var(--muted);">Erreur de chargement — réessayez dans quelques secondes.</div>';
   }
 }
 
