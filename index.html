@@ -711,10 +711,11 @@ function setUser(u) {
 // ============================================================
 // API CALLS
 // ============================================================
+let _apiFetchCounter = 0;
 function apiFetch(params) {
   return new Promise((resolve, reject) => {
     if (!apiUrl) { resolve(null); return; }
-    const cb = 'cb_' + Date.now();
+    const cb = 'cb_' + Date.now() + '_' + (++_apiFetchCounter);
     const url = apiUrl + '?' + new URLSearchParams({...params, callback: cb});
     const script = document.createElement('script');
     const timeout = setTimeout(() => { delete window[cb]; script.remove(); reject(new Error('timeout')); }, 10000);
